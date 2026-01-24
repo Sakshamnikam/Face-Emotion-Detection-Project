@@ -37,8 +37,9 @@ Face Emotion Detection is a real-time AI-based computer vision project that dete
 
 ---
 
-## 🗂️ Project Structure
+## 📁 Project Structure
 
+```text
 Face_Emotion_Detection/
 │
 ├── dataset/
