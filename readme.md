@@ -57,7 +57,7 @@ Face_Emotion_Detection/
 ├── main.py               # CLI-based emotion detector
 ├── requirements.txt
 └── README.md
-
+```
 ---
 
 ## ⚙️ Requirements
