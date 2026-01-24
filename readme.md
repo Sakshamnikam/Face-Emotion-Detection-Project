@@ -83,6 +83,8 @@ tensorflow==2.10.0
 opencv-python
 numpy
 matplotlib
+Pillow
+customtkinter
 ```
 
 ---
