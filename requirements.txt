@@ -1,5 +1,6 @@
+tensorflow==2.10.0
 opencv-python
 numpy
-tensorflow
-keras
 matplotlib
+Pillow
+customtkinter
