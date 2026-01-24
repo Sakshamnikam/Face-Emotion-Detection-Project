@@ -3,6 +3,17 @@
 Face Emotion Detection is a real-time AI-based computer vision project that detects human emotions using a webcam. It leverages **Deep Learning (CNN)** and **OpenCV** to analyze facial expressions and classify emotions accurately.
 
 ---
+## 🛠️ Tech Stack
+
+- **Programming Language:** Python 3.10
+- **Deep Learning:** TensorFlow, Keras
+- **Computer Vision:** OpenCV
+- **GUI Framework:** CustomTkinter
+- **Image Processing:** NumPy, PIL
+- **Model Type:** Convolutional Neural Network (CNN)
+- **Dataset:** FER-2013
+- **Packaging:** PyInstaller (Windows EXE)
+
 
 ## ✨ Features
 
@@ -28,8 +39,7 @@ Face Emotion Detection is a real-time AI-based computer vision project that dete
 
 ## 🗂️ Project Structure
 
-```text
-Face_Detection/
+Face_Emotion_Detection/
 │
 ├── dataset/
 │   ├── train/
@@ -41,11 +51,12 @@ Face_Detection/
 ├── model/
 │   └── emotion_model.h5
 │
-├── train_model.py
-├── main.py
+├── train_model.py   # Train CNN model
+├── gui.py           # GUI-based emotion detector
+├── main.py          # CLI-based emotion detector
 ├── requirements.txt
 └── README.md
-```
+
 
 ---
 
@@ -73,6 +84,32 @@ opencv-python
 numpy
 matplotlib
 ```
+
+---
+
+## 📥 Dataset Download
+
+This project uses the **FER-2013** dataset.
+
+### Steps to Download and Setup Dataset
+
+1. Download the dataset from Kaggle:
+
+   👉 [https://www.kaggle.com/datasets/msambare/fer2013](https://www.kaggle.com/datasets/msambare/fer2013)
+
+2. Extract the downloaded ZIP file.
+
+3. Copy the extracted **fer2013** folder into the `dataset/` directory of this project.
+
+After copying, the structure should look like:
+
+```text
+dataset/
+├── train/
+└── test/
+```
+
+⚠️ **Note:** Make sure the folder names and structure remain unchanged, otherwise the training script may not work correctly.
 
 ---
 
@@ -118,7 +155,7 @@ model/emotion_model.h5
 ### Step 2️⃣ Run Emotion Detection
 
 ```bash
-python main.py
+python gui.py
 ```
 
 ✔ Webcam opens
@@ -157,6 +194,8 @@ python main.py
 * Accuracy depends on the dataset quality
 * Requires Python 3.10
 
+---
+## NOTE:• First run may be slow due to model loading
 ---
 
 ## 🚀 Future Enhancements
