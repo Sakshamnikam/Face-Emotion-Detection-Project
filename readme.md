@@ -51,12 +51,11 @@ Face_Emotion_Detection/
 ├── model/
 │   └── emotion_model.h5
 │
-├── train_model.py   # Train CNN model
-├── gui.py           # GUI-based emotion detector
-├── main.py          # CLI-based emotion detector
+├── train_model.py        # Train CNN model
+├── gui.py                # GUI-based emotion detector
+├── main.py               # CLI-based emotion detector
 ├── requirements.txt
 └── README.md
-
 
 ---
 
