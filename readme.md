@@ -80,11 +80,11 @@ pip install -r requirements.txt
 
 ```text
 tensorflow==2.10.0
-opencv-python
-numpy
-matplotlib
-Pillow
-customtkinter
+opencv-python==4.8.0.76
+numpy==1.23.5
+matplotlib==3.7.2
+Pillow==9.5.0
+customtkinter==5.2.1
 ```
 
 ---
