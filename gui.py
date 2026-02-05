@@ -3,6 +3,7 @@ import numpy as np
 import customtkinter as ctk
 from PIL import Image, ImageTk
 from tensorflow.keras.models import load_model
+from tkinter import filedialog
 
 # ---------------- SETTINGS ----------------
 ctk.set_appearance_mode("dark")
@@ -32,7 +33,7 @@ def stop_camera():
     running = False
     if cap:
         cap.release()
-    video_label.configure(image="")
+    video_label.configure(image="", text="")
 
 def update_frame():
     global cap, running
@@ -44,6 +45,7 @@ def update_frame():
     if not ret:
         return
 
+    frame = cv2.resize(frame, (500, 400))
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
@@ -53,7 +55,7 @@ def update_frame():
         face = face / 255.0
         face = np.reshape(face, (1, 48, 48, 1))
 
-        prediction = model.predict(face)
+        prediction = model.predict(face, verbose=0)
         emotion = emotion_labels[np.argmax(prediction)]
 
         cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
@@ -66,9 +68,57 @@ def update_frame():
     imgtk = ImageTk.PhotoImage(image=img)
 
     video_label.imgtk = imgtk
-    video_label.configure(image=imgtk)
+    video_label.configure(image=imgtk, text="")
 
     video_label.after(10, update_frame)
+
+def upload_image():
+    global running, cap
+
+    # Stop camera if running
+    running = False
+    if cap:
+        cap.release()
+
+    file_path = filedialog.askopenfilename(
+        filetypes=[("Image Files", "*.jpg *.jpeg *.png")]
+    )
+
+    if not file_path:
+        return
+
+    img = cv2.imread(file_path)
+    img = cv2.resize(img, (500, 400))
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+    if len(faces) == 0:
+        video_label.configure(text="No face detected", image="")
+        return
+
+    for (x, y, w, h) in faces:
+        face = gray[y:y+h, x:x+w]
+        face = cv2.resize(face, (48, 48))
+        face = face / 255.0
+        face = np.reshape(face, (1, 48, 48, 1))
+
+        prediction = model.predict(face, verbose=0)
+        emotion = emotion_labels[np.argmax(prediction)]
+
+        cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        cv2.putText(
+            img, emotion, (x, y-10),
+            cv2.FONT_HERSHEY_SIMPLEX, 1,
+            (0, 255, 0), 2
+        )
+
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = Image.fromarray(img)
+
+    imgtk = ImageTk.PhotoImage(image=img)
+    video_label.imgtk = imgtk
+    video_label.configure(image=imgtk, text="")
 
 # ---------------- GUI ----------------
 app = ctk.CTk()
@@ -106,5 +156,13 @@ stop_btn = ctk.CTkButton(
     command=stop_camera
 )
 stop_btn.grid(row=0, column=1, padx=20)
+
+upload_btn = ctk.CTkButton(
+    btn_frame,
+    text="Upload Image",
+    width=150,
+    command=upload_image
+)
+upload_btn.grid(row=1, column=0, columnspan=2, pady=15)
 
 app.mainloop()
