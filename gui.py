@@ -21,6 +21,8 @@ emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutr
 cap = None
 running = False
 
+CONFIDENCE_THRESHOLD = 0.6
+
 # ---------------- FUNCTIONS ----------------
 def start_camera():
     global cap, running
@@ -35,6 +37,16 @@ def stop_camera():
         cap.release()
     video_label.configure(image="", text="")
 
+def predict_emotion(face):
+    prediction = model.predict(face, verbose=0)[0]
+    confidence = np.max(prediction)
+    emotion_index = np.argmax(prediction)
+
+    if confidence >= CONFIDENCE_THRESHOLD:
+        return emotion_labels[emotion_index]
+    else:
+        return "Uncertain"
+
 def update_frame():
     global cap, running
 
@@ -47,21 +59,30 @@ def update_frame():
 
     frame = cv2.resize(frame, (500, 400))
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+    faces = face_cascade.detectMultiScale(
+        gray, scaleFactor=1.3, minNeighbors=5
+    )
 
     for (x, y, w, h) in faces:
-        face = gray[y:y+h, x:x+w]
+        pad = int(0.1 * w)
+        face = gray[
+            max(0, y-pad):y+h+pad,
+            max(0, x-pad):x+w+pad
+        ]
+
         face = cv2.resize(face, (48, 48))
         face = face / 255.0
         face = np.reshape(face, (1, 48, 48, 1))
 
-        prediction = model.predict(face, verbose=0)
-        emotion = emotion_labels[np.argmax(prediction)]
+        emotion = predict_emotion(face)
 
-        cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
-        cv2.putText(frame, emotion, (x, y-10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1,
-                    (0,255,0), 2)
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0), 2)
+        cv2.putText(
+            frame, emotion, (x, y-10),
+            cv2.FONT_HERSHEY_SIMPLEX, 1,
+            (0,255,0), 2
+        )
 
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     img = Image.fromarray(frame)
@@ -75,7 +96,6 @@ def update_frame():
 def upload_image():
     global running, cap
 
-    # Stop camera if running
     running = False
     if cap:
         cap.release()
@@ -91,26 +111,32 @@ def upload_image():
     img = cv2.resize(img, (500, 400))
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+    faces = face_cascade.detectMultiScale(
+        gray, scaleFactor=1.3, minNeighbors=5
+    )
 
     if len(faces) == 0:
         video_label.configure(text="No face detected", image="")
         return
 
     for (x, y, w, h) in faces:
-        face = gray[y:y+h, x:x+w]
+        pad = int(0.1 * w)
+        face = gray[
+            max(0, y-pad):y+h+pad,
+            max(0, x-pad):x+w+pad
+        ]
+
         face = cv2.resize(face, (48, 48))
         face = face / 255.0
         face = np.reshape(face, (1, 48, 48, 1))
 
-        prediction = model.predict(face, verbose=0)
-        emotion = emotion_labels[np.argmax(prediction)]
+        emotion = predict_emotion(face)
 
-        cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        cv2.rectangle(img, (x, y), (x+w, y+h), (0,255,0), 2)
         cv2.putText(
             img, emotion, (x, y-10),
             cv2.FONT_HERSHEY_SIMPLEX, 1,
-            (0, 255, 0), 2
+            (0,255,0), 2
         )
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
