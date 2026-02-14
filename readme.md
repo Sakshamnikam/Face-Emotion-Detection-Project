@@ -80,11 +80,16 @@ pip install -r requirements.txt
 
 ```text
 tensorflow==2.10.0
-opencv-python==4.8.0.76
+keras==2.10.0
 numpy==1.23.5
+scipy==1.10.1
+opencv-python==4.8.0.76
 matplotlib==3.7.2
 Pillow==9.5.0
 customtkinter==5.2.1
+h5py==3.8.0
+protobuf==3.19.6
+
 ```
 
 ---
