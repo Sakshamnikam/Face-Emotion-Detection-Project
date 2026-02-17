@@ -1,17 +1,17 @@
 import tensorflow as tf
+import numpy as np
+from sklearn.utils import class_weight
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import (
-    Conv2D, MaxPooling2D,
-    Dense, Flatten, Dropout,
-    BatchNormalization
+    Conv2D, MaxPooling2D, Flatten,
+    Dense, Dropout, BatchNormalization
 )
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
-# ---------------- SETTINGS ----------------
 IMG_SIZE = 48
 BATCH_SIZE = 64
-EPOCHS = 40
+EPOCHS = 50   # increased
 
 train_path = "dataset/train"
 test_path = "dataset/test"
@@ -20,15 +20,13 @@ test_path = "dataset/test"
 train_datagen = ImageDataGenerator(
     rescale=1./255,
     rotation_range=20,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
     zoom_range=0.2,
+    width_shift_range=0.1,
+    height_shift_range=0.1,
     horizontal_flip=True
 )
 
-test_datagen = ImageDataGenerator(
-    rescale=1./255
-)
+test_datagen = ImageDataGenerator(rescale=1./255)
 
 train_data = train_datagen.flow_from_directory(
     train_path,
@@ -46,55 +44,63 @@ test_data = test_datagen.flow_from_directory(
     batch_size=BATCH_SIZE
 )
 
-# ---------------- CNN MODEL ----------------
+# ---------------- CLASS WEIGHTS ----------------
+class_weights = class_weight.compute_class_weight(
+    class_weight='balanced',
+    classes=np.unique(train_data.classes),
+    y=train_data.classes
+)
+
+class_weights = dict(enumerate(class_weights))
+
+print("Class Weights:", class_weights)
+
+# ---------------- MODEL ----------------
 model = Sequential([
+
     Conv2D(32, (3,3), activation='relu', input_shape=(48,48,1)),
     BatchNormalization(),
-    MaxPooling2D(2,2),
-
     Conv2D(64, (3,3), activation='relu'),
     BatchNormalization(),
     MaxPooling2D(2,2),
+    Dropout(0.25),
 
     Conv2D(128, (3,3), activation='relu'),
     BatchNormalization(),
     MaxPooling2D(2,2),
+    Dropout(0.25),
+
+    Conv2D(256, (3,3), activation='relu'),
+    BatchNormalization(),
+    MaxPooling2D(2,2),
+    Dropout(0.25),
 
     Flatten(),
-    Dense(256, activation='relu'),
+
+    Dense(512, activation='relu'),
+    BatchNormalization(),
     Dropout(0.5),
+
     Dense(7, activation='softmax')
 ])
 
-# ---------------- COMPILE ----------------
 model.compile(
-    optimizer='adam',
+    optimizer=tf.keras.optimizers.Adam(1e-4),
     loss='categorical_crossentropy',
     metrics=['accuracy']
 )
 
-# ---------------- CALLBACKS ----------------
-early_stop = EarlyStopping(
-    monitor='val_loss',
-    patience=8,
-    restore_best_weights=True
-)
+early_stop = EarlyStopping(patience=7, restore_best_weights=True)
+reduce_lr = ReduceLROnPlateau(patience=4)
 
-reduce_lr = ReduceLROnPlateau(
-    monitor='val_loss',
-    factor=0.5,
-    patience=4,
-    min_lr=1e-6
-)
-
-# ---------------- TRAIN ----------------
 model.fit(
     train_data,
-    epochs=EPOCHS,
     validation_data=test_data,
-    callbacks=[early_stop, reduce_lr]
+    epochs=EPOCHS,
+    callbacks=[early_stop, reduce_lr],
+    class_weight=class_weights   # 🔥 IMPORTANT LINE
 )
 
-# ---------------- SAVE MODEL ----------------
 model.save("model/emotion_model.h5")
-print("✅ Improved model trained & saved successfully!")
+
+print("🔥 48x48 CNN with Class Weights Saved Successfully!")

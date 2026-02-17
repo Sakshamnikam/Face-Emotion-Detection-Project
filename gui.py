@@ -5,30 +5,32 @@ from PIL import Image, ImageTk
 from tensorflow.keras.models import load_model
 from tkinter import filedialog
 
-# ---------------- SETTINGS ----------------
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-# ---------------- LOAD MODEL ----------------
 model = load_model("model/emotion_model.h5")
 
 face_cascade = cv2.CascadeClassifier(
     "haarcascade/haarcascade_frontalface_default.xml"
 )
 
-emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+emotion_labels = [
+    'Angry', 'Disgust', 'Fear',
+    'Happy', 'Sad', 'Surprise', 'Neutral'
+]
 
 cap = None
 running = False
 
 CONFIDENCE_THRESHOLD = 0.6
 
-# ---------------- FUNCTIONS ----------------
+
 def start_camera():
     global cap, running
     cap = cv2.VideoCapture(0)
     running = True
     update_frame()
+
 
 def stop_camera():
     global cap, running
@@ -36,6 +38,7 @@ def stop_camera():
     if cap:
         cap.release()
     video_label.configure(image="", text="")
+
 
 def predict_emotion(face):
     prediction = model.predict(face, verbose=0)[0]
@@ -46,6 +49,7 @@ def predict_emotion(face):
         return emotion_labels[emotion_index]
     else:
         return "Uncertain"
+
 
 def update_frame():
     global cap, running
@@ -60,17 +64,11 @@ def update_frame():
     frame = cv2.resize(frame, (500, 400))
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    faces = face_cascade.detectMultiScale(
-        gray, scaleFactor=1.3, minNeighbors=5
-    )
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
     for (x, y, w, h) in faces:
-        pad = int(0.1 * w)
-        face = gray[
-            max(0, y-pad):y+h+pad,
-            max(0, x-pad):x+w+pad
-        ]
 
+        face = gray[y:y+h, x:x+w]
         face = cv2.resize(face, (48, 48))
         face = face / 255.0
         face = np.reshape(face, (1, 48, 48, 1))
@@ -93,6 +91,7 @@ def update_frame():
 
     video_label.after(10, update_frame)
 
+
 def upload_image():
     global running, cap
 
@@ -111,21 +110,15 @@ def upload_image():
     img = cv2.resize(img, (500, 400))
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    faces = face_cascade.detectMultiScale(
-        gray, scaleFactor=1.3, minNeighbors=5
-    )
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
     if len(faces) == 0:
         video_label.configure(text="No face detected", image="")
         return
 
     for (x, y, w, h) in faces:
-        pad = int(0.1 * w)
-        face = gray[
-            max(0, y-pad):y+h+pad,
-            max(0, x-pad):x+w+pad
-        ]
 
+        face = gray[y:y+h, x:x+w]
         face = cv2.resize(face, (48, 48))
         face = face / 255.0
         face = np.reshape(face, (1, 48, 48, 1))
@@ -141,12 +134,12 @@ def upload_image():
 
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = Image.fromarray(img)
-
     imgtk = ImageTk.PhotoImage(image=img)
+
     video_label.imgtk = imgtk
     video_label.configure(image=imgtk, text="")
 
-# ---------------- GUI ----------------
+
 app = ctk.CTk()
 app.title("Face Emotion Detection")
 app.geometry("900x600")
@@ -165,12 +158,7 @@ video_label.pack()
 btn_frame = ctk.CTkFrame(app)
 btn_frame.pack(pady=20)
 
-start_btn = ctk.CTkButton(
-    btn_frame,
-    text="Start Camera",
-    width=150,
-    command=start_camera
-)
+start_btn = ctk.CTkButton(btn_frame, text="Start Camera", width=150, command=start_camera)
 start_btn.grid(row=0, column=0, padx=20)
 
 stop_btn = ctk.CTkButton(
