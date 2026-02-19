@@ -63,6 +63,8 @@ def update_frame():
 
     frame = cv2.resize(frame, (500, 400))
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.equalizeHist(gray)
+
 
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
@@ -110,7 +112,13 @@ def upload_image():
     img = cv2.resize(img, (500, 400))
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+    faces = face_cascade.detectMultiScale(
+    gray,
+    scaleFactor=1.1,
+    minNeighbors=3,
+    minSize=(30, 30)
+    )
+
 
     if len(faces) == 0:
         video_label.configure(text="No face detected", image="")
