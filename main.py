@@ -1,13 +1,21 @@
 import cv2
 import numpy as np
 from tensorflow.keras.models import load_model
+import sys
+import os
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 # Load model
-model = load_model("model/emotion_model.h5")
+model = load_model(resource_path("model/emotion_model.h5"))
 
 # Load face detector
 face_cascade = cv2.CascadeClassifier(
-    "haarcascade/haarcascade_frontalface_default.xml"
+    resource_path("haarcascade/haarcascade_frontalface_default.xml")
 )
 
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']

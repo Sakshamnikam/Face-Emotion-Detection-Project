@@ -4,16 +4,24 @@ import customtkinter as ctk
 from PIL import Image, ImageTk
 from tkinter import filedialog
 from tensorflow.keras.models import load_model
+import sys
+import os
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 # ---------------- SETTINGS ----------------
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 # ---------------- LOAD MODEL ----------------
-model = load_model("model/emotion_model.h5")
+model = load_model(resource_path("model/emotion_model.h5"))
 
 face_cascade = cv2.CascadeClassifier(
-    "haarcascade/haarcascade_frontalface_default.xml"
+    resource_path("haarcascade/haarcascade_frontalface_default.xml")
 )
 
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
@@ -75,7 +83,11 @@ def process_and_display(frame):
         face = np.reshape(face, (1, 48, 48, 1))
 
         prediction = model.predict(face)
-        emotion = emotion_labels[np.argmax(prediction)]
+        max_index = np.argmax(prediction)
+        emotion = emotion_labels[max_index]
+        confidence = prediction[0][max_index] * 100
+
+        label_text = f"{emotion} ({confidence:.1f}%)"
 
         cv2.rectangle(frame, (x,y), (x+w,y+h), (0,255,0), 2)
         cv2.putText(frame, emotion, (x, y-10),
