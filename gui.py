@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import customtkinter as ctk
 from PIL import Image, ImageTk
+from tkinter import filedialog
 from tensorflow.keras.models import load_model
 
 # ---------------- SETTINGS ----------------
@@ -15,12 +16,12 @@ face_cascade = cv2.CascadeClassifier(
     "haarcascade/haarcascade_frontalface_default.xml"
 )
 
-emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
 cap = None
 running = False
 
-# ---------------- FUNCTIONS ----------------
+# ---------------- CAMERA FUNCTIONS ----------------
 def start_camera():
     global cap, running
     cap = cv2.VideoCapture(0)
@@ -44,6 +45,26 @@ def update_frame():
     if not ret:
         return
 
+    process_and_display(frame)
+    video_label.after(10, update_frame)
+
+# ---------------- IMAGE UPLOAD FUNCTION ----------------
+def upload_image():
+    global running
+    running = False
+
+    file_path = filedialog.askopenfilename(
+        filetypes=[("Image Files", "*.jpg *.jpeg *.png")]
+    )
+
+    if not file_path:
+        return
+
+    frame = cv2.imread(file_path)
+    process_and_display(frame)
+
+# ---------------- COMMON PROCESS FUNCTION ----------------
+def process_and_display(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
@@ -61,19 +82,27 @@ def update_frame():
                     cv2.FONT_HERSHEY_SIMPLEX, 1,
                     (0,255,0), 2)
 
+    # Convert BGR → RGB
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    # Convert to PIL
     img = Image.fromarray(frame)
-    imgtk = ImageTk.PhotoImage(image=img)
 
-    video_label.imgtk = imgtk
-    video_label.configure(image=imgtk)
+    # 🔥 Resize to fit GUI
+    img = img.resize((700, 450))   # Change size as you like
 
-    video_label.after(10, update_frame)
+    # 🔥 Use CTkImage instead of ImageTk
+    ctk_image = ctk.CTkImage(light_image=img,
+                             dark_image=img,
+                             size=(700, 450))
+
+    video_label.configure(image=ctk_image)
+    video_label.image = ctk_image
 
 # ---------------- GUI ----------------
 app = ctk.CTk()
 app.title("Face Emotion Detection")
-app.geometry("900x600")
+app.geometry("900x650")
 app.resizable(False, False)
 
 title = ctk.CTkLabel(
@@ -95,7 +124,7 @@ start_btn = ctk.CTkButton(
     width=150,
     command=start_camera
 )
-start_btn.grid(row=0, column=0, padx=20)
+start_btn.grid(row=0, column=0, padx=15)
 
 stop_btn = ctk.CTkButton(
     btn_frame,
@@ -105,6 +134,15 @@ stop_btn = ctk.CTkButton(
     hover_color="#aa0000",
     command=stop_camera
 )
-stop_btn.grid(row=0, column=1, padx=20)
+stop_btn.grid(row=0, column=1, padx=15)
+
+upload_btn = ctk.CTkButton(
+    btn_frame,
+    text="Upload Image",
+    width=150,
+    fg_color="#1f6aa5",
+    command=upload_image
+)
+upload_btn.grid(row=0, column=2, padx=15)
 
 app.mainloop()
